@@ -1,0 +1,4 @@
+oauth2
+lxml
+requests
+requests_oauthlib
