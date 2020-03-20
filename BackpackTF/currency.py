@@ -22,11 +22,14 @@ class Currency:
         response = requests.get(
             BACKPACK_TF_URL.format(url=url, version=version), params=params
         )
-        json_data = response.json()["response"]
-        if int(json_data["success"]) == 1:
-            return json_data
-        else:
+        json_data = response.json()
+        if response.status_code == 403:
+            # Invalid API KEY
+            raise ApiRequestError(json_data["response"]["message"])
+        elif response.status_code == 400:
+            # Invalid item
             raise ApiRequestError(json_data["message"])
+        return json_data["response"]
 
     def get_currencies(self):
         """
@@ -36,7 +39,7 @@ class Currency:
         return response["currencies"]
 
     def price_history(
-        self, name="", quality="Unique", craftable=1, tradable=1, priceIndex=0
+        self, name, quality="Unique", craftable=1, tradable=1, priceIndex=0
     ):
         """
         Gets Price History of a specific item in an array of previous values
@@ -62,12 +65,10 @@ class Currency:
         response = self._request("IGetPriceHistory", params)
         return response["history"]
 
-    def item_price(
-        self, name="", quality="Unique", craftable=1, tradable=1, priceIndex=0
-    ):
+    def item_price(self, name, quality="Unique", craftable=1, tradable=1, priceIndex=0):
         """
         Gets Price of a specific item
-        
+
         Name - The item's base name
         Quality - The item's quality, Strange, Unique, Unusual
         Craftable - Get the item's craftable or not 0 or 1
